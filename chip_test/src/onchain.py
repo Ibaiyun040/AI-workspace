@@ -388,7 +388,8 @@ def hypersync_full_pull(chain: str, addr: str, max_seconds: int | None = None,
     return key
 
 
-def hypersync_windowed_pull(chain: str, addr: str, t_lo: int, t_hi: int) -> str:
+def hypersync_windowed_pull(chain: str, addr: str, t_lo: int, t_hi: int,
+                            max_logs: int = 8_000_000) -> str:
     """Fallback for mega-history tokens: HyperSync logs in [t_lo, t_hi] window
     + NodeReal archive balances at window start (BSC only)."""
     assert chain == "BSC"
@@ -403,7 +404,7 @@ def hypersync_windowed_pull(chain: str, addr: str, t_lo: int, t_hi: int) -> str:
     if os.path.exists(tr_path) and os.path.exists(b0_path):
         return key
     print(f"    windowed fallback {addr[:8]}: blocks {b0}..{b1}", flush=True)
-    hypersync_full_pull(chain, addr, max_seconds=None, max_logs=8_000_000,
+    hypersync_full_pull(chain, addr, max_seconds=None, max_logs=max_logs,
                         from_block=b0, to_block=b1, key_suffix=suffix)
     # full_pull wrote a b0.json with zero balances; replace with archive snapshot
     df, _ = load_token(key)

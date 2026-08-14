@@ -136,7 +136,8 @@ def pull_and_factor(units, chain_filter=None, skip=()):
             if chain == "ETH":
                 key = eth_full_pull(addr)
             else:
-                budget = 3600 if is_event.get((chain, addr)) else 1500
+                ev = bool(is_event.get((chain, addr)))
+                budget = 3600 if ev else 1500
                 try:
                     key = hypersync_full_pull(chain, addr, max_seconds=budget,
                                               max_logs=5_000_000)
@@ -145,7 +146,9 @@ def pull_and_factor(units, chain_filter=None, skip=()):
                         raise
                     print(f"  {contract}: full history too heavy, "
                           f"windowed fallback", flush=True)
-                    key = hypersync_windowed_pull(chain, addr, lo, hi)
+                    key = hypersync_windowed_pull(
+                        chain, addr, lo, hi,
+                        max_logs=8_000_000 if ev else 3_000_000)
             emit_from = lo + LOOKBACK - EMIT_BACK   # = min(T)-45d
             f = compute_daily_factors(key, chain, addr, load_gate(contract),
                                       emit_from, hi)
