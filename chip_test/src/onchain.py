@@ -107,7 +107,7 @@ def nodereal(method, params, timeout=25, max_tries=10):
     raise RuntimeError(f"nodereal exhausted retries: {method}")
 
 
-def nodereal_batch_calls(calls: list[dict], block: int, batch=100):
+def nodereal_batch_calls(calls: list[dict], block: int, batch=250):
     """Batched eth_call at a historical block. calls: [{'to':..,'data':..}]"""
     out = []
     for i in range(0, len(calls), batch):
