@@ -161,8 +161,11 @@ def bsc_get_logs(addr, from_block, to_block, progress=True):
                 "address": addr, "topics": [TRANSFER_TOPIC],
                 "fromBlock": hex(cur), "toBlock": hex(end)}])
         except RuntimeError as e:
-            if "block range" in str(e) and chunk > 1000:
-                chunk //= 2
+            msg = str(e)
+            retryable = ("block range" in msg or "logs count" in msg
+                         or "response size" in msg or "timeout" in msg.lower())
+            if retryable and chunk > 200:
+                chunk = max(200, chunk // 4)
                 continue
             raise
         logs.extend(res)

@@ -148,6 +148,8 @@ def pull_and_factor(units, chain_filter=None):
 
 
 def assemble_panel(units):
+    import time as _time
+    now = _time.time()
     rows = []
     for u in units:
         fpath = os.path.join(FACT_DIR, f"{u['chain']}_{u['addr']}.csv")
@@ -157,7 +159,7 @@ def assemble_panel(units):
         if f.empty:
             continue
         f["off"] = ((f["day"] - u["T"]) // 86400).astype(int)
-        sel = f[(f["off"] >= min(TRAJ)) & (f["off"] <= max(TRAJ))]
+        sel = f[(f["off"] >= min(TRAJ)) & (f["off"] <= max(TRAJ)) & (f["day"] <= now)]
         for _, r in sel.iterrows():
             rec = {"kind": u["kind"], "contract": u["contract"],
                    "chain": u["chain"], "T": u["T"], "off": int(r["off"])}

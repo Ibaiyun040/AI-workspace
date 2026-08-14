@@ -1,0 +1,60 @@
+ETH invalid-intc-8700276-380 INTC_USDT
+Traceback (most recent call last):
+  File "/workspace/chip_test/src/event_study.py", line 132, in pull_and_factor
+    try:
+         
+  File "/workspace/chip_test/src/onchain.py", line 306, in eth_full_pull
+    raise RuntimeError(f"no transfers via blockscout for {addr}")
+RuntimeError: no transfers via blockscout for invalid-intc-8700276-380
+
+ETH invalid-apr-8700015-380 APR_USDT
+Traceback (most recent call last):
+  File "/workspace/chip_test/src/event_study.py", line 132, in pull_and_factor
+    try:
+         
+  File "/workspace/chip_test/src/onchain.py", line 306, in eth_full_pull
+    raise RuntimeError(f"no transfers via blockscout for {addr}")
+RuntimeError: no transfers via blockscout for invalid-apr-8700015-380
+
+BSC 0xcaae2a2f939f51d97cdfa9a86e79e3f085b799f3 TUT_USDT
+Traceback (most recent call last):
+  File "/workspace/chip_test/src/event_study.py", line 136, in pull_and_factor
+    key = bsc_windowed_pull(addr, lo, hi)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 190, in bsc_windowed_pull
+    logs = bsc_get_logs(addr, b0, b1)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 160, in bsc_get_logs
+    res = nodereal("eth_getLogs", [{
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 94, in nodereal
+    raise RuntimeError(msg[:200])
+RuntimeError: {'code': -32005, 'message': 'logs count exceeds the limit 50000'}
+
+ETH invalid-mu-8700305-380 MU_USDT
+Traceback (most recent call last):
+  File "/workspace/chip_test/src/event_study.py", line 132, in pull_and_factor
+    try:
+         
+  File "/workspace/chip_test/src/onchain.py", line 306, in eth_full_pull
+    raise RuntimeError(f"no transfers via blockscout for {addr}")
+RuntimeError: no transfers via blockscout for invalid-mu-8700305-380
+
+ETH invalid-lly-8700272-380 LLY_USDT
+Traceback (most recent call last):
+  File "/workspace/chip_test/src/event_study.py", line 132, in pull_and_factor
+    try:
+         
+  File "/workspace/chip_test/src/onchain.py", line 306, in eth_full_pull
+    raise RuntimeError(f"no transfers via blockscout for {addr}")
+RuntimeError: no transfers via blockscout for invalid-lly-8700272-380
+
+ETH invalid-truth-870781-380 TRUTH_USDT
+Traceback (most recent call last):
+  File "/workspace/chip_test/src/event_study.py", line 132, in pull_and_factor
+    try:
+         
+  File "/workspace/chip_test/src/onchain.py", line 306, in eth_full_pull
+    raise RuntimeError(f"no transfers via blockscout for {addr}")
+RuntimeError: no transfers via blockscout for invalid-truth-870781-380
+
