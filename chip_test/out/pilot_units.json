@@ -33,14 +33,6 @@
  },
  {
   "kind": "control",
-  "contract": "INTC_USDT",
-  "ccy": "INTC",
-  "chain": "ETH",
-  "addr": "invalid-intc-8700276-380",
-  "T": 1786258800
- },
- {
-  "kind": "control",
   "contract": "LAB_USDT",
   "ccy": "LAB",
   "chain": "BSC",
@@ -57,18 +49,10 @@
  },
  {
   "kind": "control",
-  "contract": "APR_USDT",
-  "ccy": "APR",
-  "chain": "ETH",
-  "addr": "invalid-apr-8700015-380",
-  "T": 1782943200
- },
- {
-  "kind": "control",
-  "contract": "HANA_USDT",
-  "ccy": "HANA",
+  "contract": "BTR_USDT",
+  "ccy": "BTR",
   "chain": "BSC",
-  "addr": "0x6261963ebe9ff014aad10ecc3b0238d4d04e8353",
+  "addr": "0xfed13d0c40790220fbde712987079eda1ed75c51",
   "T": 1782943200
  },
  {
@@ -85,6 +69,14 @@
   "ccy": "ASTER",
   "chain": "BSC",
   "addr": "0x000ae314e2a2172a039b26378814c252734f556a",
+  "T": 1776351600
+ },
+ {
+  "kind": "control",
+  "contract": "BEAT_USDT",
+  "ccy": "BEAT",
+  "chain": "BSC",
+  "addr": "0xcf3232b85b43bca90e51d38cc06cc8bb8c8a3e36",
   "T": 1776351600
  },
  {
@@ -105,10 +97,10 @@
  },
  {
   "kind": "control",
-  "contract": "BARD_USDT",
-  "ccy": "BARD",
-  "chain": "ETH",
-  "addr": "0xf0db65d17e30a966c2ae6a21f6bba71cea6e9754",
+  "contract": "LIGHT_USDT",
+  "ccy": "LIGHT",
+  "chain": "BSC",
+  "addr": "0x477c2c0459004e3354ba427fa285d7c053203c0e",
   "T": 1774976400
  },
  {
@@ -117,14 +109,6 @@
   "ccy": "LAB",
   "chain": "BSC",
   "addr": "0x7ec43cf65f1663f820427c62a5780b8f2e25593a",
-  "T": 1780441200
- },
- {
-  "kind": "control",
-  "contract": "MU_USDT",
-  "ccy": "MU",
-  "chain": "ETH",
-  "addr": "invalid-mu-8700305-380",
   "T": 1780441200
  },
  {
@@ -144,14 +128,6 @@
   "T": 1779901200
  },
  {
-  "kind": "control",
-  "contract": "LLY_USDT",
-  "ccy": "LLY",
-  "chain": "ETH",
-  "addr": "invalid-lly-8700272-380",
-  "T": 1779901200
- },
- {
   "kind": "event",
   "contract": "BR_USDT",
   "ccy": "BR",
@@ -161,18 +137,10 @@
  },
  {
   "kind": "control",
-  "contract": "IN_USDT",
-  "ccy": "IN",
-  "chain": "ETH",
-  "addr": "0x61fac5f038515572d6f42d4bcb6b581642753d50",
-  "T": 1774198800
- },
- {
-  "kind": "control",
-  "contract": "TRUTH_USDT",
-  "ccy": "TRUTH",
-  "chain": "ETH",
-  "addr": "invalid-truth-870781-380",
+  "contract": "AIO_USDT",
+  "ccy": "AIO",
+  "chain": "BSC",
+  "addr": "0x81a7da4074b8e0ed51bea40f9dcbdf4d9d4832b4",
   "T": 1774198800
  },
  {
@@ -192,19 +160,19 @@
   "T": 1771873200
  },
  {
+  "kind": "control",
+  "contract": "SLVON_USDT",
+  "ccy": "SLVON",
+  "chain": "ETH",
+  "addr": "0xf3e4872e6a4cf365888d93b6146a2baa7348f1a4",
+  "T": 1771873200
+ },
+ {
   "kind": "event",
   "contract": "RAVE_USDT",
   "ccy": "RAVE",
   "chain": "ETH",
   "addr": "0x17205fab260a7a6383a81452ce6315a39370db97",
-  "T": 1776520800
- },
- {
-  "kind": "control",
-  "contract": "XAG_USDT",
-  "ccy": "XAG",
-  "chain": "ETH",
-  "addr": "invalid-xag-8700166-380",
   "T": 1776520800
  },
  {
@@ -216,27 +184,35 @@
   "T": 1775728800
  },
  {
-  "kind": "event",
-  "contract": "BROCCOLIF3B_USDT",
-  "ccy": "BROCCOLIF3B",
+  "kind": "control",
+  "contract": "AT_USDT",
+  "ccy": "AT",
+  "chain": "BSC",
+  "addr": "0x9be61a38725b265bc3eb7bfdf17afdfc9d26c130",
+  "T": 1775728800
+ },
+ {
+  "kind": "control",
+  "contract": "SLVON_USDT",
+  "ccy": "SLVON",
   "chain": "ETH",
-  "addr": "invalid-broccolif3b-870149-380",
-  "T": 1786258800
+  "addr": "0xf3e4872e6a4cf365888d93b6146a2baa7348f1a4",
+  "T": 1775728800
+ },
+ {
+  "kind": "event",
+  "contract": "EVAA_USDT",
+  "ccy": "EVAA",
+  "chain": "BSC",
+  "addr": "0xaa036928c9c0df07d525b55ea8ee690bb5a628c1",
+  "T": 1783818000
  },
  {
   "kind": "control",
-  "contract": "COAI_USDT",
-  "ccy": "COAI",
+  "contract": "ASTER_USDT",
+  "ccy": "ASTER",
   "chain": "BSC",
-  "addr": "0x0a8d6c86e1bce73fe4d0bd531e1a567306836ea5",
-  "T": 1786258800
- },
- {
-  "kind": "control",
-  "contract": "HOME_USDT",
-  "ccy": "HOME",
-  "chain": "BSC",
-  "addr": "0x4bfaa776991e85e5f8b1255461cbbd216cfc714f",
-  "T": 1786258800
+  "addr": "0x000ae314e2a2172a039b26378814c252734f556a",
+  "T": 1783818000
  }
 ]
