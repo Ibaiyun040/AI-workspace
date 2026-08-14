@@ -118,16 +118,15 @@ def pull_and_factor(units, chain_filter=None):
     # ETH first (fast), then BSC ordered by window size
     order = sorted(tok.items(), key=lambda kv: (kv[0][0] != "ETH",
                                                 kv[1][1] - kv[1][0]))
-    keys = {}
-    for (chain, addr), (lo, hi, contract) in order:
+    def work(item):
+        (chain, addr), (lo, hi, contract) = item
         fpath = os.path.join(FACT_DIR, f"{chain}_{addr}.csv")
         if os.path.exists(fpath):
             df = pd.read_csv(fpath)
             if not df.empty and df["day"].min() <= lo + LOOKBACK - EMIT_BACK + 86400 \
                and df["day"].max() >= hi - 86400:
-                keys[(chain, addr)] = fpath
                 print(f"cached factors {chain} {contract}", flush=True)
-                continue
+                return (chain, addr), fpath
         print(f"pulling {chain} {contract} {addr}", flush=True)
         try:
             if chain == "ETH":
@@ -138,12 +137,20 @@ def pull_and_factor(units, chain_filter=None):
             f = compute_daily_factors(key, chain, addr, load_gate(contract),
                                       emit_from, hi)
             f.to_csv(fpath, index=False)
-            keys[(chain, addr)] = fpath
-            print(f"  factors saved: {len(f)} days", flush=True)
+            print(f"  factors saved {contract}: {len(f)} days", flush=True)
+            return (chain, addr), fpath
         except Exception:  # noqa: BLE001
             traceback.print_exc()
             with open(os.path.join(OUT_DIR, "pull_failures.log"), "a") as fh:
                 fh.write(f"{chain} {addr} {contract}\n{traceback.format_exc()}\n")
+            return (chain, addr), None
+
+    from concurrent.futures import ThreadPoolExecutor
+    keys = {}
+    with ThreadPoolExecutor(max_workers=3) as ex:
+        for k, v in ex.map(work, list(order)):
+            if v:
+                keys[k] = v
     return keys
 
 

@@ -282,11 +282,27 @@ def hypersync_full_pull(chain: str, addr: str) -> str:
     url = HYPERSYNC[chain] + "/query"
     headers = {"Authorization": f"Bearer {token}",
                "Content-Type": "application/json"}
+    ckpt_path = os.path.join(ONCHAIN_DIR, key + ".partial.json.gz")
     from_block = 0
     logs = []
     block_ts_map = {}
+    if os.path.exists(ckpt_path):
+        with gzip.open(ckpt_path, "rt") as f:
+            ck = json.load(f)
+        from_block = ck["next_block"]
+        logs = ck["logs"]
+        block_ts_map = {int(k): v for k, v in ck["block_ts"].items()}
+        print(f"    resume {key} from block {from_block} "
+              f"({len(logs)} logs)", flush=True)
     t0 = time.time()
     n_page = 0
+
+    def save_ckpt(nxt):
+        with gzip.open(ckpt_path + ".tmp", "wt") as f:
+            json.dump({"next_block": nxt, "logs": logs,
+                       "block_ts": block_ts_map}, f)
+        os.replace(ckpt_path + ".tmp", ckpt_path)
+
     while True:
         body = {"from_block": from_block,
                 "logs": [{"address": [addr],
@@ -314,14 +330,19 @@ def hypersync_full_pull(chain: str, addr: str) -> str:
         n_page += 1
         nxt = d.get("next_block")
         arch = d.get("archive_height") or 0
-        if n_page % 20 == 0:
-            print(f"    hypersync {chain} page {n_page}: block {nxt}/{arch}, "
-                  f"{len(logs)} logs ({time.time()-t0:.0f}s)", flush=True)
+        if n_page % 40 == 0:
+            print(f"    hypersync {chain} {addr[:8]} page {n_page}: "
+                  f"block {nxt}/{arch}, {len(logs)} logs "
+                  f"({time.time()-t0:.0f}s)", flush=True)
+        if n_page % 300 == 0:
+            save_ckpt(nxt)
         if not nxt or nxt >= arch:
             break
         from_block = nxt
     if not logs:
         raise RuntimeError(f"no transfers via hypersync for {addr} on {chain}")
+    if os.path.exists(ckpt_path):
+        os.remove(ckpt_path)
     rows = []
     for lg in logs:
         t1, t2 = lg.get("topic1"), lg.get("topic2")
