@@ -103,10 +103,12 @@ def cc_row(c, cc, cov_map):
             "chain": cov_map[cc]["chain"], "addr": cov_map[cc]["addr"]}
 
 
-def pull_and_factor(units):
+def pull_and_factor(units, chain_filter=None):
     # per-token union window
     tok = {}
     for u in units:
+        if chain_filter and u["chain"] != chain_filter:
+            continue
         k = (u["chain"], u["addr"])
         lo, hi = u["T"] - LOOKBACK, u["T"] + EMIT_FWD
         if k in tok:
@@ -236,7 +238,7 @@ def main():
     print(f"units: {len(units)} ({n_ev} events, {len(units)-n_ev} controls)",
           flush=True)
     if mode in ("pull", "all"):
-        pull_and_factor(units)
+        pull_and_factor(units, chain_filter=(sys.argv[2] if len(sys.argv) > 2 else None))
     if mode in ("stats", "all"):
         panel = assemble_panel(units)
         panel.to_csv(os.path.join(OUT_DIR, "event_panel.csv"), index=False)
