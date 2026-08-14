@@ -106,6 +106,7 @@ def cc_row(c, cc, cov_map):
 def pull_and_factor(units, chain_filter=None):
     # per-token union window
     tok = {}
+    is_event = {}
     for u in units:
         if chain_filter and u["chain"] != chain_filter:
             continue
@@ -115,6 +116,7 @@ def pull_and_factor(units, chain_filter=None):
             tok[k] = (min(tok[k][0], lo), max(tok[k][1], hi), tok[k][2])
         else:
             tok[k] = (lo, hi, u["contract"])
+        is_event[k] = is_event.get(k, False) or u["kind"] == "event"
     # ETH first (fast), then BSC ordered by window size
     order = sorted(tok.items(), key=lambda kv: (kv[0][0] != "ETH",
                                                 kv[1][1] - kv[1][0]))
@@ -132,7 +134,8 @@ def pull_and_factor(units, chain_filter=None):
             if chain == "ETH":
                 key = eth_full_pull(addr)
             else:
-                key = hypersync_full_pull(chain, addr)
+                budget = 3600 if is_event.get((chain, addr)) else 1200
+                key = hypersync_full_pull(chain, addr, max_seconds=budget)
             emit_from = lo + LOOKBACK - EMIT_BACK   # = min(T)-45d
             f = compute_daily_factors(key, chain, addr, load_gate(contract),
                                       emit_from, hi)

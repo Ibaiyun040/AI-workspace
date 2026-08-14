@@ -269,7 +269,7 @@ def bsc_windowed_pull(addr: str, t_lo: int, t_hi: int) -> str:
 
 # ---------------- HyperSync (full history, any supported chain) ----------------
 
-def hypersync_full_pull(chain: str, addr: str) -> str:
+def hypersync_full_pull(chain: str, addr: str, max_seconds: int | None = None) -> str:
     """Full-history transfers via Envio HyperSync. Exact block timestamps."""
     addr = addr.lower()
     key = f"{chain}_{addr}"
@@ -330,6 +330,10 @@ def hypersync_full_pull(chain: str, addr: str) -> str:
         n_page += 1
         nxt = d.get("next_block")
         arch = d.get("archive_height") or 0
+        if max_seconds and time.time() - t0 > max_seconds:
+            save_ckpt(nxt)
+            raise RuntimeError(f"time budget exceeded ({max_seconds}s) at "
+                               f"block {nxt}, {len(logs)} logs; ckpt saved")
         if n_page % 40 == 0:
             print(f"    hypersync {chain} {addr[:8]} page {n_page}: "
                   f"block {nxt}/{arch}, {len(logs)} logs "
