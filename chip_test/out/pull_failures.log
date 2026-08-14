@@ -58,3 +58,216 @@ Traceback (most recent call last):
     raise RuntimeError(f"no transfers via blockscout for {addr}")
 RuntimeError: no transfers via blockscout for invalid-truth-870781-380
 
+ETH invalid-xag-8700166-380 XAG_USDT
+Traceback (most recent call last):
+  File "/workspace/chip_test/src/event_study.py", line 132, in pull_and_factor
+    try:
+         
+  File "/workspace/chip_test/src/onchain.py", line 306, in eth_full_pull
+    if len(rows) > 2_500_000:
+RuntimeError: no transfers via blockscout for invalid-xag-8700166-380
+
+ETH invalid-broccolif3b-870149-380 BROCCOLIF3B_USDT
+Traceback (most recent call last):
+  File "/workspace/chip_test/src/event_study.py", line 132, in pull_and_factor
+    try:
+         
+  File "/workspace/chip_test/src/onchain.py", line 306, in eth_full_pull
+    if len(rows) > 2_500_000:
+RuntimeError: no transfers via blockscout for invalid-broccolif3b-870149-380
+
+BSC 0xcaae2a2f939f51d97cdfa9a86e79e3f085b799f3 TUT_USDT
+Traceback (most recent call last):
+  File "/workspace/chip_test/src/event_study.py", line 134, in pull_and_factor
+    key = eth_full_pull(addr)
+          ^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 190, in bsc_windowed_pull
+    return key
+       ^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 160, in bsc_get_logs
+    res = nodereal("eth_getLogs", [{
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 94, in nodereal
+    raise RuntimeError(msg[:200])
+RuntimeError: {'code': -32005, 'message': 'You have reached the maximum API usage limit of public. If you need higher throughput, please check out https://meganode.nodereal.io/'}
+
+BSC 0x47474747477b199288bf72a1d702f7fe0fb1deea WLFI_USDT
+Traceback (most recent call last):
+  File "/workspace/chip_test/src/event_study.py", line 134, in pull_and_factor
+    key = eth_full_pull(addr)
+          ^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 190, in bsc_windowed_pull
+    return key
+       ^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 160, in bsc_get_logs
+    res = nodereal("eth_getLogs", [{
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 94, in nodereal
+    raise RuntimeError(msg[:200])
+RuntimeError: {'code': -32005, 'message': 'You have reached the maximum API usage limit of public. If you need higher throughput, please check out https://meganode.nodereal.io/'}
+
+BSC 0x6261963ebe9ff014aad10ecc3b0238d4d04e8353 HANA_USDT
+Traceback (most recent call last):
+  File "/workspace/chip_test/src/event_study.py", line 134, in pull_and_factor
+    key = eth_full_pull(addr)
+          ^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 190, in bsc_windowed_pull
+    return key
+       ^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 160, in bsc_get_logs
+    res = nodereal("eth_getLogs", [{
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 94, in nodereal
+    raise RuntimeError(msg[:200])
+RuntimeError: {'code': -32005, 'message': 'You have reached the maximum API usage limit of public. If you need higher throughput, please check out https://meganode.nodereal.io/'}
+
+BSC 0x997a58129890bbda032231a52ed1ddc845fc18e1 SIREN_USDT
+Traceback (most recent call last):
+  File "/workspace/chip_test/src/event_study.py", line 134, in pull_and_factor
+    key = eth_full_pull(addr)
+          ^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 190, in bsc_windowed_pull
+    return key
+       ^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 160, in bsc_get_logs
+    res = nodereal("eth_getLogs", [{
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 94, in nodereal
+    raise RuntimeError(msg[:200])
+RuntimeError: {'code': -32005, 'message': 'You have reached the maximum API usage limit of public. If you need higher throughput, please check out https://meganode.nodereal.io/'}
+
+BSC 0xdaf1695c41327b61b9b9965ac6a5843a3198cf07 STO_USDT
+Traceback (most recent call last):
+  File "/workspace/chip_test/src/event_study.py", line 134, in pull_and_factor
+    key = eth_full_pull(addr)
+          ^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 190, in bsc_windowed_pull
+    return key
+       ^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 160, in bsc_get_logs
+    res = nodereal("eth_getLogs", [{
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 94, in nodereal
+    raise RuntimeError(msg[:200])
+RuntimeError: {'code': -32005, 'message': 'You have reached the maximum API usage limit of public. If you need higher throughput, please check out https://meganode.nodereal.io/'}
+
+BSC 0x7c8217517ed4711fe2deccdfeffe8d906b9ae11f BLESS_USDT
+Traceback (most recent call last):
+  File "/workspace/chip_test/src/event_study.py", line 134, in pull_and_factor
+    key = eth_full_pull(addr)
+          ^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 190, in bsc_windowed_pull
+    return key
+       ^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 160, in bsc_get_logs
+    res = nodereal("eth_getLogs", [{
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 94, in nodereal
+    raise RuntimeError(msg[:200])
+RuntimeError: {'code': -32005, 'message': 'You have reached the maximum API usage limit of public. If you need higher throughput, please check out https://meganode.nodereal.io/'}
+
+BSC 0xa5c8e1513b6a08334b479fe4d71f1253259469be GUA_USDT
+Traceback (most recent call last):
+  File "/workspace/chip_test/src/event_study.py", line 134, in pull_and_factor
+    key = eth_full_pull(addr)
+          ^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 190, in bsc_windowed_pull
+    return key
+       ^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 160, in bsc_get_logs
+    res = nodereal("eth_getLogs", [{
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 94, in nodereal
+    raise RuntimeError(msg[:200])
+RuntimeError: {'code': -32005, 'message': 'You have reached the maximum API usage limit of public. If you need higher throughput, please check out https://meganode.nodereal.io/'}
+
+BSC 0xff7d6a96ae471bbcd7713af9cb1feeb16cf56b41 BR_USDT
+Traceback (most recent call last):
+  File "/workspace/chip_test/src/event_study.py", line 134, in pull_and_factor
+    key = eth_full_pull(addr)
+          ^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 190, in bsc_windowed_pull
+    return key
+       ^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 160, in bsc_get_logs
+    res = nodereal("eth_getLogs", [{
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 94, in nodereal
+    raise RuntimeError(msg[:200])
+RuntimeError: {'code': -32005, 'message': 'You have reached the maximum API usage limit of public. If you need higher throughput, please check out https://meganode.nodereal.io/'}
+
+BSC 0x5d3a12c42e5372b2cc3264ab3cdcf660a1555238 ARIA_USDT
+Traceback (most recent call last):
+  File "/workspace/chip_test/src/event_study.py", line 134, in pull_and_factor
+    key = eth_full_pull(addr)
+          ^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 190, in bsc_windowed_pull
+    return key
+       ^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 160, in bsc_get_logs
+    res = nodereal("eth_getLogs", [{
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 94, in nodereal
+    raise RuntimeError(msg[:200])
+RuntimeError: {'code': -32005, 'message': 'You have reached the maximum API usage limit of public. If you need higher throughput, please check out https://meganode.nodereal.io/'}
+
+BSC 0x4bfaa776991e85e5f8b1255461cbbd216cfc714f HOME_USDT
+Traceback (most recent call last):
+  File "/workspace/chip_test/src/event_study.py", line 134, in pull_and_factor
+    key = eth_full_pull(addr)
+          ^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 190, in bsc_windowed_pull
+    return key
+       ^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 160, in bsc_get_logs
+    res = nodereal("eth_getLogs", [{
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 94, in nodereal
+    raise RuntimeError(msg[:200])
+RuntimeError: {'code': -32005, 'message': 'You have reached the maximum API usage limit of public. If you need higher throughput, please check out https://meganode.nodereal.io/'}
+
+BSC 0x7ec43cf65f1663f820427c62a5780b8f2e25593a LAB_USDT
+Traceback (most recent call last):
+  File "/workspace/chip_test/src/event_study.py", line 134, in pull_and_factor
+    key = eth_full_pull(addr)
+          ^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 190, in bsc_windowed_pull
+    return key
+       ^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 160, in bsc_get_logs
+    res = nodereal("eth_getLogs", [{
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 94, in nodereal
+    raise RuntimeError(msg[:200])
+RuntimeError: {'code': -32005, 'message': 'You have reached the maximum API usage limit of public. If you need higher throughput, please check out https://meganode.nodereal.io/'}
+
+BSC 0x0a8d6c86e1bce73fe4d0bd531e1a567306836ea5 COAI_USDT
+Traceback (most recent call last):
+  File "/workspace/chip_test/src/event_study.py", line 134, in pull_and_factor
+    key = eth_full_pull(addr)
+          ^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 190, in bsc_windowed_pull
+    return key
+       ^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 160, in bsc_get_logs
+    res = nodereal("eth_getLogs", [{
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 94, in nodereal
+    raise RuntimeError(msg[:200])
+RuntimeError: {'code': -32005, 'message': 'You have reached the maximum API usage limit of public. If you need higher throughput, please check out https://meganode.nodereal.io/'}
+
+BSC 0x000ae314e2a2172a039b26378814c252734f556a ASTER_USDT
+Traceback (most recent call last):
+  File "/workspace/chip_test/src/event_study.py", line 134, in pull_and_factor
+    key = eth_full_pull(addr)
+          ^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 190, in bsc_windowed_pull
+    return key
+       ^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 160, in bsc_get_logs
+    res = nodereal("eth_getLogs", [{
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 94, in nodereal
+    raise RuntimeError(msg[:200])
+RuntimeError: {'code': -32005, 'message': 'You have reached the maximum API usage limit of public. If you need higher throughput, please check out https://meganode.nodereal.io/'}
+

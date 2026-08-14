@@ -117,14 +117,14 @@ def main():
             if len(w2) < 100:
                 continue
             oi2 = w2["oi_usd"].median()
-            if not np.isfinite(oi2) or oi2 < OI_MIN / 3:
+            if not np.isfinite(oi2) or oi2 < OI_MIN / 5:
                 continue
             ratio = oi2 / tgt_oi
-            if ratio < 1 / 3 or ratio > 3:
+            if ratio < 0.2 or ratio > 5:
                 continue
             cands.append((abs(np.log(ratio)), name, oi2))
         cands.sort()
-        for rank, (d, name, oi2) in enumerate(cands[:6]):
+        for rank, (d, name, oi2) in enumerate(cands[:10]):
             controls.append({"event_contract": e["contract"], "event_t": int(T),
                              "control_contract": name, "control_oi": oi2,
                              "target_oi": tgt_oi, "rank": rank})

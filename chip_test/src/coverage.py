@@ -31,14 +31,16 @@ def main(currencies: list[str]):
             rows.append({"currency": ccy, "chain": None, "addr": None,
                          "total_supply": None, "evm_ok": False, "note": "no spot listing"})
             continue
+        import re
         chains = info.get("chains") or []
         best = None
         for ch in chains:
             nm = (ch.get("name") or "").upper()
-            if nm in EVM_CHAINS and ch.get("addr"):
+            a = (ch.get("addr") or "").lower()
+            if nm in EVM_CHAINS and re.fullmatch(r"0x[0-9a-f]{40}", a):
                 pri = 0 if nm == "BSC" else (1 if nm == "ETH" else 2)
                 if best is None or pri < best[0]:
-                    best = (pri, nm, ch["addr"])
+                    best = (pri, nm, a)
         rows.append({
             "currency": ccy,
             "chain": best[1] if best else (chains[0].get("name") if chains else None),
