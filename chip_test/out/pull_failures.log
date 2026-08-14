@@ -271,3 +271,18 @@ Traceback (most recent call last):
     raise RuntimeError(msg[:200])
 RuntimeError: {'code': -32005, 'message': 'You have reached the maximum API usage limit of public. If you need higher throughput, please check out https://meganode.nodereal.io/'}
 
+BSC 0x47474747477b199288bf72a1d702f7fe0fb1deea WLFI_USDT
+Traceback (most recent call last):
+  File "/workspace/chip_test/src/event_study.py", line 136, in pull_and_factor
+    key = bsc_windowed_pull(addr, lo, hi)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 193, in bsc_windowed_pull
+    logs = bsc_get_logs(addr, b0, b1)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 160, in bsc_get_logs
+    res = nodereal("eth_getLogs", [{
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 94, in nodereal
+    raise RuntimeError(msg[:200])
+RuntimeError: {'code': -32005, 'message': 'You have reached the maximum API usage limit of public. If you need higher throughput, please check out https://meganode.nodereal.io/'}
+

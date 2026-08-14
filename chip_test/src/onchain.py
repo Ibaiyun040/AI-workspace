@@ -79,7 +79,7 @@ def nodereal(method, params, timeout=25, max_tries=10):
     if os.path.exists(cp):
         with open(cp) as f:
             return json.load(f)
-    for attempt in range(max_tries):
+    for attempt in range(max(max_tries, 15)):
         NR_LIMITER.acquire()
         try:
             r = requests.post(NODEREAL, json={"jsonrpc": "2.0", "id": 1,
@@ -88,8 +88,10 @@ def nodereal(method, params, timeout=25, max_tries=10):
             d = r.json()
             if "error" in d:
                 msg = str(d["error"])
-                if "rate" in msg.lower() or "limit exceed" in msg.lower():
-                    time.sleep(3 + attempt * 2)
+                low = msg.lower()
+                if "usage limit" in low or "-32005" in low and "logs count" not in low \
+                        or "rate" in low or "limit exceed" in low:
+                    time.sleep(min(20 + attempt * 20, 120))
                     continue
                 raise RuntimeError(msg[:200])
             res = d["result"]
@@ -148,6 +150,9 @@ def nodereal_batch_calls(calls: list[dict], block: int, batch=100):
     return out
 
 
+LOG_BUDGET = 1_500_000  # skip mega-tokens (bad controls, quota burners)
+
+
 def bsc_get_logs(addr, from_block, to_block, progress=True):
     logs = []
     cur = from_block
@@ -155,6 +160,8 @@ def bsc_get_logs(addr, from_block, to_block, progress=True):
     t0 = time.time()
     n_req = 0
     while cur <= to_block:
+        if len(logs) > LOG_BUDGET:
+            raise RuntimeError(f"log budget exceeded ({len(logs)}), token too heavy")
         end = min(cur + chunk - 1, to_block)
         try:
             res = nodereal("eth_getLogs", [{
