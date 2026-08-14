@@ -1,10 +1,6 @@
 # 指标研究最长会话导出
-
 - 会话 ID: `019ff707-5bc2-7ab3-a773-f23ef78378aa`
-- 主题: 轧空脆弱性 / SSRI 指标研究（Grok Build 会话）
-- 原始约 100 万字符，按 GitHub Contents API 限制拆成多个分段
-
-## 分段
+- 共 11 个分段（GitHub Contents API 单文件限制）
 
 1. [part01](./part01.md)
 2. [part02](./part02.md)
