@@ -23,7 +23,7 @@ from scipy.stats import mannwhitneyu
 
 from common import DATA_DIR, OUT_DIR
 from factors import compute_daily_factors
-from onchain import bsc_windowed_pull, eth_full_pull
+from onchain import eth_full_pull, hypersync_full_pull
 
 GATE_DIR = os.path.join(DATA_DIR, "gate")
 FACT_DIR = os.path.join(DATA_DIR, "factors")
@@ -133,7 +133,7 @@ def pull_and_factor(units, chain_filter=None):
             if chain == "ETH":
                 key = eth_full_pull(addr)
             else:
-                key = bsc_windowed_pull(addr, lo, hi)
+                key = hypersync_full_pull(chain, addr)
             emit_from = lo + LOOKBACK - EMIT_BACK   # = min(T)-45d
             f = compute_daily_factors(key, chain, addr, load_gate(contract),
                                       emit_from, hi)

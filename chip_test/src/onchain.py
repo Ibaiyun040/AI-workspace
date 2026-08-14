@@ -27,6 +27,8 @@ os.makedirs(ONCHAIN_DIR, exist_ok=True)
 NODEREAL = "https://bsc-mainnet.nodereal.io/v1/64a9df0874fb4a93b9d0a3849de012d3"
 BSC_LIGHT = ["https://bsc-rpc.publicnode.com", "https://bsc-dataseed.bnbchain.org"]
 BLOCKSCOUT = "https://eth.blockscout.com/api"
+HYPERSYNC = {"BSC": "https://bsc.hypersync.xyz", "ETH": "https://eth.hypersync.xyz"}
+_ENVIO_TOKEN_PATH = os.path.join(DATA_DIR, "envio.token")
 
 NR_LIMITER = RateLimiter(0.5, 1)      # nodereal demo key is shared: be gentle
 LIGHT_LIMITER = RateLimiter(5, 5)
@@ -262,6 +264,87 @@ def bsc_windowed_pull(addr: str, t_lo: int, t_hi: int) -> str:
         json.dump({"b0_block": b0, "b0_ts": t_lo, "supply0": str(s0 or 0),
                    "balances": b0bal}, f)
     print(f"    saved {len(df)} transfers, {len(b0bal)} initial holders", flush=True)
+    return key
+
+
+# ---------------- HyperSync (full history, any supported chain) ----------------
+
+def hypersync_full_pull(chain: str, addr: str) -> str:
+    """Full-history transfers via Envio HyperSync. Exact block timestamps."""
+    addr = addr.lower()
+    key = f"{chain}_{addr}"
+    tr_path = os.path.join(ONCHAIN_DIR, key + ".transfers.csv.gz")
+    b0_path = os.path.join(ONCHAIN_DIR, key + ".b0.json")
+    if os.path.exists(tr_path) and os.path.exists(b0_path):
+        return key
+    with open(_ENVIO_TOKEN_PATH) as f:
+        token = f.read().strip()
+    url = HYPERSYNC[chain] + "/query"
+    headers = {"Authorization": f"Bearer {token}",
+               "Content-Type": "application/json"}
+    from_block = 0
+    logs = []
+    block_ts_map = {}
+    t0 = time.time()
+    n_page = 0
+    while True:
+        body = {"from_block": from_block,
+                "logs": [{"address": [addr],
+                          "topics": [[TRANSFER_TOPIC]]}],
+                "field_selection": {
+                    "log": ["block_number", "log_index", "data",
+                            "topic1", "topic2"],
+                    "block": ["number", "timestamp"]}}
+        for attempt in range(8):
+            try:
+                r = requests.post(url, json=body, headers=headers, timeout=60)
+                d = r.json()
+                if "error" in d:
+                    raise RuntimeError(str(d["error"])[:200])
+                break
+            except (requests.RequestException, json.JSONDecodeError) as e:
+                if attempt == 7:
+                    raise RuntimeError(f"hypersync failed: {e}")
+                time.sleep(2 + attempt * 3)
+        for blk in d.get("data", []):
+            for b in blk.get("blocks", []):
+                block_ts_map[b["number"]] = int(b["timestamp"], 16)
+            for lg in blk.get("logs", []):
+                logs.append(lg)
+        n_page += 1
+        nxt = d.get("next_block")
+        arch = d.get("archive_height") or 0
+        if n_page % 20 == 0:
+            print(f"    hypersync {chain} page {n_page}: block {nxt}/{arch}, "
+                  f"{len(logs)} logs ({time.time()-t0:.0f}s)", flush=True)
+        if not nxt or nxt >= arch:
+            break
+        from_block = nxt
+    if not logs:
+        raise RuntimeError(f"no transfers via hypersync for {addr} on {chain}")
+    rows = []
+    for lg in logs:
+        t1, t2 = lg.get("topic1"), lg.get("topic2")
+        if not t1 or not t2 or not lg.get("data"):
+            continue
+        blk = lg["block_number"]
+        rows.append({"block": blk, "log_index": lg["log_index"],
+                     "ts": block_ts_map.get(blk, 0),
+                     "src": "0x" + t1[-40:], "dst": "0x" + t2[-40:],
+                     "value": str(int(lg["data"], 16))})
+    df = (pd.DataFrame(rows)
+          .sort_values(["block", "log_index"])
+          .reset_index(drop=True))
+    buf = io.BytesIO()
+    with gzip.open(buf, "wt") as gz:
+        df.to_csv(gz, index=False)
+    with open(tr_path, "wb") as f:
+        f.write(buf.getvalue())
+    with open(b0_path, "w") as f:
+        json.dump({"b0_block": 0, "b0_ts": int(df["ts"].iloc[0]),
+                   "supply0": "0", "balances": {}}, f)
+    print(f"    saved {len(df)} transfers via hypersync "
+          f"({n_page} pages, {time.time()-t0:.0f}s)", flush=True)
     return key
 
 
