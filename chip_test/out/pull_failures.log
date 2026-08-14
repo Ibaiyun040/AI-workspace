@@ -404,3 +404,24 @@ Traceback (most recent call last):
     raise RuntimeError("nodereal batch exhausted retries")
 RuntimeError: nodereal batch exhausted retries
 
+BSC 0x997a58129890bbda032231a52ed1ddc845fc18e1 SIREN_USDT
+Traceback (most recent call last):
+  File "/workspace/chip_test/src/event_study.py", line 142, in work
+    key = hypersync_full_pull(chain, addr, max_seconds=budget,
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 349, in hypersync_full_pull
+    raise RuntimeError(f"log cap exceeded ({len(logs)}>{max_logs}) at "
+RuntimeError: log cap exceeded (5000236>5000000) at block 80089346; ckpt saved
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/workspace/chip_test/src/event_study.py", line 149, in work
+    key = hypersync_windowed_pull(
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 513, in hypersync_windowed_pull
+    hypersync_full_pull(chain, addr, max_seconds=None, max_logs=max_logs,
+  File "/workspace/chip_test/src/onchain.py", line 349, in hypersync_full_pull
+    raise RuntimeError(f"log cap exceeded ({len(logs)}>{max_logs}) at "
+RuntimeError: log cap exceeded (8000757>8000000) at block 90601014; ckpt saved
+
