@@ -446,3 +446,24 @@ Traceback (most recent call last):
     raise RuntimeError(f"log cap exceeded ({len(logs)}>{max_logs}) at "
 RuntimeError: log cap exceeded (3000916>3000000) at block 72857925; ckpt saved
 
+BSC 0x477c2c0459004e3354ba427fa285d7c053203c0e LIGHT_USDT
+Traceback (most recent call last):
+  File "/workspace/chip_test/src/event_study.py", line 142, in work
+    key = hypersync_full_pull(chain, addr, max_seconds=budget,
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 345, in hypersync_full_pull
+    raise RuntimeError(f"time budget exceeded ({max_seconds}s) at "
+RuntimeError: time budget exceeded (1500s) at block 69107125, 4590428 logs; ckpt saved
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/workspace/chip_test/src/event_study.py", line 149, in work
+    key = hypersync_windowed_pull(
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 513, in hypersync_windowed_pull
+    hypersync_full_pull(chain, addr, max_seconds=None, max_logs=max_logs,
+  File "/workspace/chip_test/src/onchain.py", line 349, in hypersync_full_pull
+    raise RuntimeError(f"log cap exceeded ({len(logs)}>{max_logs}) at "
+RuntimeError: log cap exceeded (3001462>3000000) at block 72917314; ckpt saved
+
