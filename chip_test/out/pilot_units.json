@@ -1,0 +1,242 @@
+[
+ {
+  "kind": "event",
+  "contract": "TUT_USDT",
+  "ccy": "TUT",
+  "chain": "BSC",
+  "addr": "0xcaae2a2f939f51d97cdfa9a86e79e3f085b799f3",
+  "T": 1786222800
+ },
+ {
+  "kind": "control",
+  "contract": "ASTER_USDT",
+  "ccy": "ASTER",
+  "chain": "BSC",
+  "addr": "0x000ae314e2a2172a039b26378814c252734f556a",
+  "T": 1786222800
+ },
+ {
+  "kind": "control",
+  "contract": "WLFI_USDT",
+  "ccy": "WLFI",
+  "chain": "BSC",
+  "addr": "0x47474747477b199288bf72a1d702f7fe0fb1deea",
+  "T": 1786222800
+ },
+ {
+  "kind": "event",
+  "contract": "BICO_USDT",
+  "ccy": "BICO",
+  "chain": "ETH",
+  "addr": "0xf17e65822b568b3903685a7c9f496cf7656cc6c2",
+  "T": 1786258800
+ },
+ {
+  "kind": "control",
+  "contract": "INTC_USDT",
+  "ccy": "INTC",
+  "chain": "ETH",
+  "addr": "invalid-intc-8700276-380",
+  "T": 1786258800
+ },
+ {
+  "kind": "control",
+  "contract": "LAB_USDT",
+  "ccy": "LAB",
+  "chain": "BSC",
+  "addr": "0x7ec43cf65f1663f820427c62a5780b8f2e25593a",
+  "T": 1786258800
+ },
+ {
+  "kind": "event",
+  "contract": "TAIKO_USDT",
+  "ccy": "TAIKO",
+  "chain": "ETH",
+  "addr": "0x10dea67478c5f8c5e2d90e5e9b26dbe60c54d800",
+  "T": 1782943200
+ },
+ {
+  "kind": "control",
+  "contract": "APR_USDT",
+  "ccy": "APR",
+  "chain": "ETH",
+  "addr": "invalid-apr-8700015-380",
+  "T": 1782943200
+ },
+ {
+  "kind": "control",
+  "contract": "HANA_USDT",
+  "ccy": "HANA",
+  "chain": "BSC",
+  "addr": "0x6261963ebe9ff014aad10ecc3b0238d4d04e8353",
+  "T": 1782943200
+ },
+ {
+  "kind": "event",
+  "contract": "SIREN_USDT",
+  "ccy": "SIREN",
+  "chain": "BSC",
+  "addr": "0x997a58129890bbda032231a52ed1ddc845fc18e1",
+  "T": 1776351600
+ },
+ {
+  "kind": "control",
+  "contract": "ASTER_USDT",
+  "ccy": "ASTER",
+  "chain": "BSC",
+  "addr": "0x000ae314e2a2172a039b26378814c252734f556a",
+  "T": 1776351600
+ },
+ {
+  "kind": "event",
+  "contract": "STO_USDT",
+  "ccy": "STO",
+  "chain": "BSC",
+  "addr": "0xdaf1695c41327b61b9b9965ac6a5843a3198cf07",
+  "T": 1774976400
+ },
+ {
+  "kind": "control",
+  "contract": "BLESS_USDT",
+  "ccy": "BLESS",
+  "chain": "BSC",
+  "addr": "0x7c8217517ed4711fe2deccdfeffe8d906b9ae11f",
+  "T": 1774976400
+ },
+ {
+  "kind": "control",
+  "contract": "BARD_USDT",
+  "ccy": "BARD",
+  "chain": "ETH",
+  "addr": "0xf0db65d17e30a966c2ae6a21f6bba71cea6e9754",
+  "T": 1774976400
+ },
+ {
+  "kind": "event",
+  "contract": "LAB_USDT",
+  "ccy": "LAB",
+  "chain": "BSC",
+  "addr": "0x7ec43cf65f1663f820427c62a5780b8f2e25593a",
+  "T": 1780441200
+ },
+ {
+  "kind": "control",
+  "contract": "MU_USDT",
+  "ccy": "MU",
+  "chain": "ETH",
+  "addr": "invalid-mu-8700305-380",
+  "T": 1780441200
+ },
+ {
+  "kind": "event",
+  "contract": "GUA_USDT",
+  "ccy": "GUA",
+  "chain": "BSC",
+  "addr": "0xa5c8e1513b6a08334b479fe4d71f1253259469be",
+  "T": 1779901200
+ },
+ {
+  "kind": "control",
+  "contract": "COAI_USDT",
+  "ccy": "COAI",
+  "chain": "BSC",
+  "addr": "0x0a8d6c86e1bce73fe4d0bd531e1a567306836ea5",
+  "T": 1779901200
+ },
+ {
+  "kind": "control",
+  "contract": "LLY_USDT",
+  "ccy": "LLY",
+  "chain": "ETH",
+  "addr": "invalid-lly-8700272-380",
+  "T": 1779901200
+ },
+ {
+  "kind": "event",
+  "contract": "BR_USDT",
+  "ccy": "BR",
+  "chain": "BSC",
+  "addr": "0xff7d6a96ae471bbcd7713af9cb1feeb16cf56b41",
+  "T": 1774198800
+ },
+ {
+  "kind": "control",
+  "contract": "IN_USDT",
+  "ccy": "IN",
+  "chain": "ETH",
+  "addr": "0x61fac5f038515572d6f42d4bcb6b581642753d50",
+  "T": 1774198800
+ },
+ {
+  "kind": "control",
+  "contract": "TRUTH_USDT",
+  "ccy": "TRUTH",
+  "chain": "ETH",
+  "addr": "invalid-truth-870781-380",
+  "T": 1774198800
+ },
+ {
+  "kind": "event",
+  "contract": "POWER_USDT",
+  "ccy": "POWER",
+  "chain": "ETH",
+  "addr": "0x9dc44ae5be187eca9e2a67e33f27a4c91cea1223",
+  "T": 1771873200
+ },
+ {
+  "kind": "control",
+  "contract": "KITE_USDT",
+  "ccy": "KITE",
+  "chain": "ETH",
+  "addr": "0x904567252d8f48555b7447c67dca23f0372e16be",
+  "T": 1771873200
+ },
+ {
+  "kind": "event",
+  "contract": "RAVE_USDT",
+  "ccy": "RAVE",
+  "chain": "ETH",
+  "addr": "0x17205fab260a7a6383a81452ce6315a39370db97",
+  "T": 1776520800
+ },
+ {
+  "kind": "control",
+  "contract": "XAG_USDT",
+  "ccy": "XAG",
+  "chain": "ETH",
+  "addr": "invalid-xag-8700166-380",
+  "T": 1776520800
+ },
+ {
+  "kind": "event",
+  "contract": "ARIA_USDT",
+  "ccy": "ARIA",
+  "chain": "BSC",
+  "addr": "0x5d3a12c42e5372b2cc3264ab3cdcf660a1555238",
+  "T": 1775728800
+ },
+ {
+  "kind": "event",
+  "contract": "BROCCOLIF3B_USDT",
+  "ccy": "BROCCOLIF3B",
+  "chain": "ETH",
+  "addr": "invalid-broccolif3b-870149-380",
+  "T": 1786258800
+ },
+ {
+  "kind": "control",
+  "contract": "COAI_USDT",
+  "ccy": "COAI",
+  "chain": "BSC",
+  "addr": "0x0a8d6c86e1bce73fe4d0bd531e1a567306836ea5",
+  "T": 1786258800
+ },
+ {
+  "kind": "control",
+  "contract": "HOME_USDT",
+  "ccy": "HOME",
+  "chain": "BSC",
+  "addr": "0x4bfaa776991e85e5f8b1255461cbbd216cfc714f",
+  "T": 1786258800
+ }
+]

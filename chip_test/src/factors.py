@@ -91,9 +91,11 @@ def compute_daily_factors(key: str, chain: str, addr: str, gate_panel,
 
     def snapshot(day_end: int):
         nonlocal supply
-        if supply <= 0:
-            return None
         s = float(supply)
+        if s <= 0:  # mint without Transfer event: fall back to held sum
+            s = float(sum(v for v in bal.values() if v > 0))
+        if s <= 0:
+            return None
         excluded = pools | {addr} | BURN
         exch = {a for a, n in txn.items() if n >= EXCH_TX} - excluded
         holders = [(a, v) for a, v in bal.items()
