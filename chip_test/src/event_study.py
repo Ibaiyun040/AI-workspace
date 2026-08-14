@@ -23,7 +23,7 @@ from scipy.stats import mannwhitneyu
 
 from common import DATA_DIR, OUT_DIR
 from factors import compute_daily_factors
-from onchain import eth_full_pull, hypersync_full_pull
+from onchain import eth_full_pull, hypersync_full_pull, hypersync_windowed_pull
 
 GATE_DIR = os.path.join(DATA_DIR, "gate")
 FACT_DIR = os.path.join(DATA_DIR, "factors")
@@ -103,12 +103,14 @@ def cc_row(c, cc, cov_map):
             "chain": cov_map[cc]["chain"], "addr": cov_map[cc]["addr"]}
 
 
-def pull_and_factor(units, chain_filter=None):
+def pull_and_factor(units, chain_filter=None, skip=()):
     # per-token union window
     tok = {}
     is_event = {}
     for u in units:
         if chain_filter and u["chain"] != chain_filter:
+            continue
+        if u["ccy"] in skip:
             continue
         k = (u["chain"], u["addr"])
         lo, hi = u["T"] - LOOKBACK, u["T"] + EMIT_FWD
@@ -134,8 +136,16 @@ def pull_and_factor(units, chain_filter=None):
             if chain == "ETH":
                 key = eth_full_pull(addr)
             else:
-                budget = 3600 if is_event.get((chain, addr)) else 1200
-                key = hypersync_full_pull(chain, addr, max_seconds=budget)
+                budget = 3600 if is_event.get((chain, addr)) else 1500
+                try:
+                    key = hypersync_full_pull(chain, addr, max_seconds=budget,
+                                              max_logs=5_000_000)
+                except RuntimeError as e:
+                    if "budget exceeded" not in str(e) and "log cap" not in str(e):
+                        raise
+                    print(f"  {contract}: full history too heavy, "
+                          f"windowed fallback", flush=True)
+                    key = hypersync_windowed_pull(chain, addr, lo, hi)
             emit_from = lo + LOOKBACK - EMIT_BACK   # = min(T)-45d
             f = compute_daily_factors(key, chain, addr, load_gate(contract),
                                       emit_from, hi)
@@ -150,7 +160,7 @@ def pull_and_factor(units, chain_filter=None):
 
     from concurrent.futures import ThreadPoolExecutor
     keys = {}
-    with ThreadPoolExecutor(max_workers=3) as ex:
+    with ThreadPoolExecutor(max_workers=2) as ex:
         for k, v in ex.map(work, list(order)):
             if v:
                 keys[k] = v
@@ -250,7 +260,9 @@ def main():
     print(f"units: {len(units)} ({n_ev} events, {len(units)-n_ev} controls)",
           flush=True)
     if mode in ("pull", "all"):
-        pull_and_factor(units, chain_filter=(sys.argv[2] if len(sys.argv) > 2 else None))
+        cf = sys.argv[2] if len(sys.argv) > 2 and sys.argv[2] != "-" else None
+        skip = tuple(sys.argv[3].split(",")) if len(sys.argv) > 3 else ()
+        pull_and_factor(units, chain_filter=cf, skip=skip)
     if mode in ("stats", "all"):
         panel = assemble_panel(units)
         panel.to_csv(os.path.join(OUT_DIR, "event_panel.csv"), index=False)

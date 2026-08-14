@@ -269,10 +269,13 @@ def bsc_windowed_pull(addr: str, t_lo: int, t_hi: int) -> str:
 
 # ---------------- HyperSync (full history, any supported chain) ----------------
 
-def hypersync_full_pull(chain: str, addr: str, max_seconds: int | None = None) -> str:
-    """Full-history transfers via Envio HyperSync. Exact block timestamps."""
+def hypersync_full_pull(chain: str, addr: str, max_seconds: int | None = None,
+                        max_logs: int | None = 6_500_000,
+                        from_block: int = 0, to_block: int | None = None,
+                        key_suffix: str = "") -> str:
+    """Transfers via Envio HyperSync (full history by default). Exact block ts."""
     addr = addr.lower()
-    key = f"{chain}_{addr}"
+    key = f"{chain}_{addr}{key_suffix}"
     tr_path = os.path.join(ONCHAIN_DIR, key + ".transfers.csv.gz")
     b0_path = os.path.join(ONCHAIN_DIR, key + ".b0.json")
     if os.path.exists(tr_path) and os.path.exists(b0_path):
@@ -283,7 +286,7 @@ def hypersync_full_pull(chain: str, addr: str, max_seconds: int | None = None) -
     headers = {"Authorization": f"Bearer {token}",
                "Content-Type": "application/json"}
     ckpt_path = os.path.join(ONCHAIN_DIR, key + ".partial.json.gz")
-    from_block = 0
+    start_block = from_block
     logs = []
     block_ts_map = {}
     if os.path.exists(ckpt_path):
@@ -311,6 +314,8 @@ def hypersync_full_pull(chain: str, addr: str, max_seconds: int | None = None) -
                     "log": ["block_number", "log_index", "data",
                             "topic1", "topic2"],
                     "block": ["number", "timestamp"]}}
+        if to_block:
+            body["to_block"] = to_block
         for attempt in range(8):
             try:
                 r = requests.post(url, json=body, headers=headers, timeout=60)
@@ -334,13 +339,18 @@ def hypersync_full_pull(chain: str, addr: str, max_seconds: int | None = None) -
             save_ckpt(nxt)
             raise RuntimeError(f"time budget exceeded ({max_seconds}s) at "
                                f"block {nxt}, {len(logs)} logs; ckpt saved")
+        if max_logs and len(logs) > max_logs:
+            save_ckpt(nxt)
+            raise RuntimeError(f"log cap exceeded ({len(logs)}>{max_logs}) at "
+                               f"block {nxt}; ckpt saved")
         if n_page % 40 == 0:
             print(f"    hypersync {chain} {addr[:8]} page {n_page}: "
                   f"block {nxt}/{arch}, {len(logs)} logs "
                   f"({time.time()-t0:.0f}s)", flush=True)
         if n_page % 300 == 0:
             save_ckpt(nxt)
-        if not nxt or nxt >= arch:
+        end = min(arch, to_block) if to_block else arch
+        if not nxt or nxt >= end:
             break
         from_block = nxt
     if not logs:
@@ -370,6 +380,48 @@ def hypersync_full_pull(chain: str, addr: str, max_seconds: int | None = None) -
                    "supply0": "0", "balances": {}}, f)
     print(f"    saved {len(df)} transfers via hypersync "
           f"({n_page} pages, {time.time()-t0:.0f}s)", flush=True)
+    return key
+
+
+def hypersync_windowed_pull(chain: str, addr: str, t_lo: int, t_hi: int) -> str:
+    """Fallback for mega-history tokens: HyperSync logs in [t_lo, t_hi] window
+    + NodeReal archive balances at window start (BSC only)."""
+    assert chain == "BSC"
+    addr = addr.lower()
+    head = bsc_latest()
+    b0 = bsc_block_at(t_lo, hi=head)
+    b1 = min(head, bsc_block_at(t_hi, hi=head) + 1000)
+    suffix = f"_w{b0 // 10000}"
+    key = f"{chain}_{addr}{suffix}"
+    tr_path = os.path.join(ONCHAIN_DIR, key + ".transfers.csv.gz")
+    b0_path = os.path.join(ONCHAIN_DIR, key + ".b0.json")
+    if os.path.exists(tr_path) and os.path.exists(b0_path):
+        return key
+    print(f"    windowed fallback {addr[:8]}: blocks {b0}..{b1}", flush=True)
+    hypersync_full_pull(chain, addr, max_seconds=None, max_logs=8_000_000,
+                        from_block=b0, to_block=b1, key_suffix=suffix)
+    # full_pull wrote a b0.json with zero balances; replace with archive snapshot
+    df, _ = load_token(key)
+    addrs = sorted(set(df["src"]) | set(df["dst"]) - {ZERO})
+    calls = [{"to": addr, "data": "0x70a08231" + a[2:].rjust(64, "0")}
+             for a in addrs]
+    print(f"    b0 balances for {len(addrs)} addrs", flush=True)
+    res = nodereal_batch_calls(calls, b0 - 1)
+    b0bal = {}
+    for a, r in zip(addrs, res):
+        v = int(r, 16) if r and r not in ("0x",) else 0
+        if v > 0:
+            b0bal[a] = str(v)
+    try:
+        s0 = nodereal("eth_call", [{"to": addr, "data": "0x18160ddd"}, hex(b0 - 1)])
+        s0 = int(s0, 16) if s0 and s0 != "0x" else None
+    except RuntimeError:
+        s0 = None
+    with open(b0_path, "w") as f:
+        json.dump({"b0_block": b0, "b0_ts": t_lo, "supply0": str(s0 or 0),
+                   "balances": b0bal, "method": "windowed"}, f)
+    print(f"    windowed saved: {len(df)} transfers, {len(b0bal)} initial holders",
+          flush=True)
     return key
 
 

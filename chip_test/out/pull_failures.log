@@ -286,3 +286,57 @@ Traceback (most recent call last):
     raise RuntimeError(msg[:200])
 RuntimeError: {'code': -32005, 'message': 'You have reached the maximum API usage limit of public. If you need higher throughput, please check out https://meganode.nodereal.io/'}
 
+BSC 0xfed13d0c40790220fbde712987079eda1ed75c51 BTR_USDT
+Traceback (most recent call last):
+  File "/workspace/chip_test/src/event_study.py", line 138, in work
+    key = hypersync_full_pull(chain, addr, max_seconds=budget)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 335, in hypersync_full_pull
+    raise RuntimeError(f"time budget exceeded ({max_seconds}s) at "
+RuntimeError: time budget exceeded (1200s) at block 75979408, 4674288 logs; ckpt saved
+
+BSC 0xcf3232b85b43bca90e51d38cc06cc8bb8c8a3e36 BEAT_USDT
+Traceback (most recent call last):
+  File "/workspace/chip_test/src/event_study.py", line 138, in work
+    key = hypersync_full_pull(chain, addr, max_seconds=budget)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 335, in hypersync_full_pull
+    raise RuntimeError(f"time budget exceeded ({max_seconds}s) at "
+RuntimeError: time budget exceeded (1200s) at block 69538296, 4512113 logs; ckpt saved
+
+BSC 0x7c8217517ed4711fe2deccdfeffe8d906b9ae11f BLESS_USDT
+Traceback (most recent call last):
+  File "/workspace/chip_test/src/event_study.py", line 138, in work
+    key = hypersync_full_pull(chain, addr, max_seconds=budget)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 335, in hypersync_full_pull
+    raise RuntimeError(f"time budget exceeded ({max_seconds}s) at "
+RuntimeError: time budget exceeded (1200s) at block 65999325, 3672213 logs; ckpt saved
+
+BSC 0x477c2c0459004e3354ba427fa285d7c053203c0e LIGHT_USDT
+Traceback (most recent call last):
+  File "/workspace/chip_test/src/event_study.py", line 138, in work
+    key = hypersync_full_pull(chain, addr, max_seconds=budget)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 335, in hypersync_full_pull
+    raise RuntimeError(f"time budget exceeded ({max_seconds}s) at "
+RuntimeError: time budget exceeded (1200s) at block 66683735, 3700739 logs; ckpt saved
+
+BSC 0x997a58129890bbda032231a52ed1ddc845fc18e1 SIREN_USDT
+Traceback (most recent call last):
+  File "/workspace/chip_test/src/event_study.py", line 138, in work
+    key = hypersync_full_pull(chain, addr, max_seconds=budget)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 335, in hypersync_full_pull
+    raise RuntimeError(f"time budget exceeded ({max_seconds}s) at "
+RuntimeError: time budget exceeded (3600s) at block 88956161, 8379557 logs; ckpt saved
+
+BSC 0x0a8d6c86e1bce73fe4d0bd531e1a567306836ea5 COAI_USDT
+Traceback (most recent call last):
+  File "/workspace/chip_test/src/event_study.py", line 138, in work
+    key = hypersync_full_pull(chain, addr, max_seconds=budget)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/chip_test/src/onchain.py", line 335, in hypersync_full_pull
+    raise RuntimeError(f"time budget exceeded ({max_seconds}s) at "
+RuntimeError: time budget exceeded (1200s) at block 65455125, 4533262 logs; ckpt saved
+
