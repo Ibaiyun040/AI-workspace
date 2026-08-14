@@ -26,7 +26,7 @@ from factors import compute_daily_factors
 from onchain import eth_full_pull, hypersync_full_pull, hypersync_windowed_pull
 
 GATE_DIR = os.path.join(DATA_DIR, "gate")
-FACT_DIR = os.path.join(DATA_DIR, "factors")
+FACT_DIR = os.path.join(OUT_DIR, "factors")  # committed to git (small, precious)
 os.makedirs(FACT_DIR, exist_ok=True)
 
 FACTORS = ["CR10", "CR50", "HHI", "dCR10_7d", "dCR10_30d", "FWA_30d",
@@ -148,7 +148,8 @@ def pull_and_factor(units, chain_filter=None, skip=()):
                           f"windowed fallback", flush=True)
                     key = hypersync_windowed_pull(
                         chain, addr, lo, hi,
-                        max_logs=8_000_000 if ev else 3_000_000)
+                        max_logs=8_000_000 if ev else 3_000_000,
+                        max_seconds=5400 if ev else 1800)
             emit_from = lo + LOOKBACK - EMIT_BACK   # = min(T)-45d
             f = compute_daily_factors(key, chain, addr, load_gate(contract),
                                       emit_from, hi)

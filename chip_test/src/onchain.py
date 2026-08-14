@@ -291,8 +291,8 @@ def hypersync_full_pull(chain: str, addr: str, max_seconds: int | None = None,
     block_ts_map = {}
     if os.path.exists(ckpt_path):
         sz = os.path.getsize(ckpt_path)
-        # ~40MB gz per 1M logs; don't materialize checkpoints beyond the cap
-        if max_logs and sz > max_logs * 40:
+        # conservative: don't materialize checkpoints anywhere near the cap
+        if max_logs and sz > max_logs * 25:
             raise RuntimeError(f"log cap exceeded (ckpt {sz>>20}MB too large "
                                f"for cap {max_logs}); use windowed fallback")
         with gzip.open(ckpt_path, "rt") as f:
@@ -388,10 +388,114 @@ def hypersync_full_pull(chain: str, addr: str, max_seconds: int | None = None,
     return key
 
 
+BURN_SET = {ZERO, "0x000000000000000000000000000000000000dead"}
+
+
+def hypersync_stream_balances(chain: str, addr: str, to_block: int,
+                              max_seconds: int | None = None) -> tuple[dict, int]:
+    """Exact balances at to_block by streaming genesis-prefix transfers via
+    HyperSync, aggregating on the fly (bounded memory, no raw log retention).
+    Seeds from an existing full-history raw checkpoint when available.
+    Returns (balances raw-int dict, minted-burned supply)."""
+    addr = addr.lower()
+    with open(_ENVIO_TOKEN_PATH) as f:
+        token = f.read().strip()
+    url = HYPERSYNC[chain] + "/query"
+    headers = {"Authorization": f"Bearer {token}",
+               "Content-Type": "application/json"}
+    bal: dict[str, int] = {}
+    supply = 0
+    from_block = 0
+
+    def apply(t1, t2, data):
+        nonlocal supply
+        if not t1 or not t2 or data in ("0x", "", None):
+            return
+        v = int(data, 16)
+        if v == 0:
+            return
+        s, d_ = "0x" + t1[-40:], "0x" + t2[-40:]
+        if s == ZERO:
+            supply += v
+        else:
+            bal[s] = bal.get(s, 0) - v
+        if d_ in BURN_SET:
+            supply -= v
+        bal[d_] = bal.get(d_, 0) + v
+
+    sckpt = os.path.join(ONCHAIN_DIR, f"{chain}_{addr}.balckpt.json.gz")
+    rawckpt = os.path.join(ONCHAIN_DIR, f"{chain}_{addr}.partial.json.gz")
+    if os.path.exists(sckpt):
+        with gzip.open(sckpt, "rt") as f:
+            ck = json.load(f)
+        if ck["to_block"] == to_block and ck["next_block"] <= to_block:
+            bal = {a: int(v) for a, v in ck["balances"].items()}
+            supply = int(ck["supply"])
+            from_block = ck["next_block"]
+            print(f"    b0-stream resume from {from_block}", flush=True)
+    if from_block == 0 and os.path.exists(rawckpt) \
+            and os.path.getsize(rawckpt) < 130_000_000:
+        try:
+            with gzip.open(rawckpt, "rt") as f:
+                ck = json.load(f)
+            for lg in ck["logs"]:
+                if lg["block_number"] >= to_block:
+                    break
+                apply(lg.get("topic1"), lg.get("topic2"), lg.get("data"))
+            from_block = min(ck["next_block"], to_block)
+            print(f"    b0-stream seeded from raw ckpt to {from_block}", flush=True)
+            del ck
+        except Exception:  # noqa: BLE001
+            bal, supply, from_block = {}, 0, 0
+
+    t0 = time.time()
+    n_page = 0
+    while from_block < to_block:
+        body = {"from_block": from_block, "to_block": to_block,
+                "logs": [{"address": [addr], "topics": [[TRANSFER_TOPIC]]}],
+                "field_selection": {"log": ["block_number", "log_index",
+                                            "data", "topic1", "topic2"]}}
+        for attempt in range(8):
+            try:
+                r = requests.post(url, json=body, headers=headers, timeout=60)
+                d = r.json()
+                if "error" in d:
+                    raise RuntimeError(str(d["error"])[:200])
+                break
+            except (requests.RequestException, json.JSONDecodeError) as e:
+                if attempt == 7:
+                    raise RuntimeError(f"hypersync b0-stream failed: {e}")
+                time.sleep(2 + attempt * 3)
+        for blk in d.get("data", []):
+            for lg in blk.get("logs", []):
+                apply(lg.get("topic1"), lg.get("topic2"), lg.get("data"))
+        n_page += 1
+        nxt = d.get("next_block")
+        if n_page % 100 == 0:
+            print(f"    b0-stream {addr[:8]} page {n_page}: block "
+                  f"{nxt}/{to_block} ({time.time()-t0:.0f}s)", flush=True)
+        if n_page % 600 == 0 or (max_seconds and time.time() - t0 > max_seconds):
+            with gzip.open(sckpt + ".tmp", "wt") as f:
+                json.dump({"to_block": to_block, "next_block": nxt,
+                           "supply": str(supply),
+                           "balances": {a: str(v) for a, v in bal.items()
+                                        if v != 0}}, f)
+            os.replace(sckpt + ".tmp", sckpt)
+            if max_seconds and time.time() - t0 > max_seconds:
+                raise RuntimeError(f"b0-stream budget exceeded at {nxt}; ckpt saved")
+        if not nxt or nxt >= to_block:
+            break
+        from_block = nxt
+    if os.path.exists(sckpt):
+        os.remove(sckpt)
+    return bal, supply
+
+
 def hypersync_windowed_pull(chain: str, addr: str, t_lo: int, t_hi: int,
-                            max_logs: int = 8_000_000) -> str:
+                            max_logs: int = 8_000_000,
+                            max_seconds: int | None = None) -> str:
     """Fallback for mega-history tokens: HyperSync logs in [t_lo, t_hi] window
-    + NodeReal archive balances at window start (BSC only)."""
+    + streamed exact balances at window start (no archive node needed)."""
     assert chain == "BSC"
     addr = addr.lower()
     head = bsc_latest()
@@ -402,32 +506,21 @@ def hypersync_windowed_pull(chain: str, addr: str, t_lo: int, t_hi: int,
     tr_path = os.path.join(ONCHAIN_DIR, key + ".transfers.csv.gz")
     b0_path = os.path.join(ONCHAIN_DIR, key + ".b0.json")
     if os.path.exists(tr_path) and os.path.exists(b0_path):
-        return key
+        with open(b0_path) as f:
+            if json.load(f).get("method") == "windowed":
+                return key
     print(f"    windowed fallback {addr[:8]}: blocks {b0}..{b1}", flush=True)
     hypersync_full_pull(chain, addr, max_seconds=None, max_logs=max_logs,
                         from_block=b0, to_block=b1, key_suffix=suffix)
-    # full_pull wrote a b0.json with zero balances; replace with archive snapshot
-    df, _ = load_token(key)
-    addrs = sorted(set(df["src"]) | set(df["dst"]) - {ZERO})
-    calls = [{"to": addr, "data": "0x70a08231" + a[2:].rjust(64, "0")}
-             for a in addrs]
-    print(f"    b0 balances for {len(addrs)} addrs", flush=True)
-    res = nodereal_batch_calls(calls, b0 - 1)
-    b0bal = {}
-    for a, r in zip(addrs, res):
-        v = int(r, 16) if r and r not in ("0x",) else 0
-        if v > 0:
-            b0bal[a] = str(v)
-    try:
-        s0 = nodereal("eth_call", [{"to": addr, "data": "0x18160ddd"}, hex(b0 - 1)])
-        s0 = int(s0, 16) if s0 and s0 != "0x" else None
-    except RuntimeError:
-        s0 = None
+    print(f"    streaming b0 balances up to block {b0}", flush=True)
+    bal, supply = hypersync_stream_balances(chain, addr, b0,
+                                            max_seconds=max_seconds)
+    b0bal = {a: str(v) for a, v in bal.items()
+             if v > 0 and a not in BURN_SET}
     with open(b0_path, "w") as f:
-        json.dump({"b0_block": b0, "b0_ts": t_lo, "supply0": str(s0 or 0),
+        json.dump({"b0_block": b0, "b0_ts": t_lo, "supply0": str(supply),
                    "balances": b0bal, "method": "windowed"}, f)
-    print(f"    windowed saved: {len(df)} transfers, {len(b0bal)} initial holders",
-          flush=True)
+    print(f"    windowed complete: {len(b0bal)} initial holders", flush=True)
     return key
 
 
