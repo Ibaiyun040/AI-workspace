@@ -1,9 +1,16 @@
 """检验 1: event study of chip-structure factors around squeeze episodes.
 
-Pipeline: select pilot episodes (EVM-covered) + OI-matched controls,
-pull transfers, compute daily factors, Mann-Whitney U on pre-event window,
-BH-FDR, aligned trajectory plots, markdown report.
+Select pilot episodes (EVM-covered, severity-ranked) + OI-matched controls,
+pull on-chain data (ETH: Blockscout full history; BSC: NodeReal windowed +
+archive B0 balances), compute daily factors, Mann-Whitney U on the pre-event
+window, BH-FDR, aligned trajectory plots, markdown-ready stats.
+
+Run modes:
+  python3 event_study.py pull     # data acquisition + factor computation only
+  python3 event_study.py stats    # stats + plots from whatever factors exist
+  python3 event_study.py all
 """
+import glob
 import gzip
 import json
 import os
@@ -16,7 +23,7 @@ from scipy.stats import mannwhitneyu
 
 from common import DATA_DIR, OUT_DIR
 from factors import compute_daily_factors
-from onchain import pull_token
+from onchain import bsc_windowed_pull, eth_full_pull
 
 GATE_DIR = os.path.join(DATA_DIR, "gate")
 FACT_DIR = os.path.join(DATA_DIR, "factors")
@@ -26,9 +33,12 @@ FACTORS = ["CR10", "CR50", "HHI", "dCR10_7d", "dCR10_30d", "FWA_30d",
            "WAR_14d", "OPR", "WCB_dist", "HODL_90d", "ExShare", "PoolShare"]
 MAX_EVENTS = 12
 MAX_EP_PER_TOKEN = 2
-CTRL_PER_EVENT = 3
-PRE_WIN = (7, 1)          # mean over days [T-7d, T-1d]
+CTRL_PER_EVENT = 2
+PRE_WIN = (7, 1)
 TRAJ = range(-30, 8)
+LOOKBACK = 135 * 86400   # covers HODL_90d at emit start T-45d
+EMIT_BACK = 45 * 86400
+EMIT_FWD = 8 * 86400
 
 
 def load_gate(contract):
@@ -36,141 +46,206 @@ def load_gate(contract):
         return pd.read_csv(f)
 
 
-def get_factors(chain, addr, contract, emit_from, emit_to):
-    key = f"{chain}_{addr.lower()}"
-    path = os.path.join(FACT_DIR, key + ".csv")
-    if os.path.exists(path):
-        df = pd.read_csv(path)
-        if df.empty or (df["day"].min() <= emit_from + 86400 and df["day"].max() >= emit_to - 86400):
-            return df
-    pull_token(chain, addr)
-    df = compute_daily_factors(chain, addr, load_gate(contract), emit_from, emit_to)
-    df.to_csv(path, index=False)
-    return df
+MAX_CTRL_AGE_D = 450  # control perp listed within this window (age matching)
 
 
-def main():
+def build_units():
     eps = pd.read_csv(os.path.join(OUT_DIR, "episodes.csv"))
     ctrl = pd.read_csv(os.path.join(OUT_DIR, "controls.csv"))
     cov = pd.read_csv(os.path.join(OUT_DIR, "chip_coverage.csv"))
-    cov_map = {r["currency"]: r for _, r in cov.iterrows() if r["evm_ok"]}
+    cov_map = {r["currency"]: r for _, r in cov.iterrows()
+               if r["evm_ok"] and r["chain"] in ("BSC", "ETH")}
+    with open(os.path.join(GATE_DIR, "_meta.json")) as f:
+        meta = json.load(f)
+    import time as _time
+    now = _time.time()
 
-    def ccy(contract):
-        return contract.replace("_USDT", "")
+    def young(contract):
+        ct = (meta.get(contract) or {}).get("create_time")
+        return ct is not None and now - ct <= MAX_CTRL_AGE_D * 86400
+
+    def ccy(c):
+        return c.replace("_USDT", "")
 
     eps["severity"] = eps[["max_amp", "max_liq_frac"]].max(axis=1)
     eps = eps[eps["contract"].map(lambda c: ccy(c) in cov_map)]
     eps = (eps.sort_values("severity", ascending=False)
               .groupby("contract").head(MAX_EP_PER_TOKEN)
               .sort_values("severity", ascending=False))
-    pilot = eps.head(MAX_EVENTS).copy()
-    print(f"pilot episodes: {len(pilot)} on tokens: {sorted(pilot['contract'].unique())}",
-          flush=True)
+    pilot = eps.head(MAX_EVENTS)
 
-    # assemble sample units
-    units = []   # (kind, contract, chain, addr, T)
+    units = []
     for _, e in pilot.iterrows():
-        units.append(("event", e["contract"], e["t_first"]))
+        ec = ccy(e["contract"])
+        echain = cov_map[ec]["chain"]
+        units.append({"kind": "event", "contract": e["contract"],
+                      "ccy": ec, "chain": echain,
+                      "addr": cov_map[ec]["addr"], "T": int(e["t_first"])})
         cands = ctrl[(ctrl["event_contract"] == e["contract"]) &
                      (ctrl["event_t"] == e["t_first"])].sort_values("rank")
-        n = 0
+        same, other = [], []
         for _, c in cands.iterrows():
-            if ccy(c["control_contract"]) not in cov_map:
+            cc = ccy(c["control_contract"])
+            if cc not in cov_map or not young(c["control_contract"]):
                 continue
-            units.append(("control", c["control_contract"], e["t_first"]))
-            n += 1
-            if n >= CTRL_PER_EVENT:
-                break
-        if n == 0:
-            print(f"  WARN no EVM control for {e['contract']} @ {e['t_first']}")
+            (same if cov_map[cc]["chain"] == echain else other).append(cc_row(c, cc, cov_map))
+        chosen = (same + other)[:CTRL_PER_EVENT]
+        for u in chosen:
+            u["T"] = int(e["t_first"])
+            units.append(u)
+        if not chosen:
+            print(f"WARN: no control for {e['contract']} @ {e['t_first']}")
+    return units
 
-    # compute factors per unit
-    rows = []
-    fail = []
-    for kind, contract, T in units:
-        info = cov_map[ccy(contract)]
-        chain, addr = info["chain"], info["addr"]
+
+def cc_row(c, cc, cov_map):
+    return {"kind": "control", "contract": c["control_contract"], "ccy": cc,
+            "chain": cov_map[cc]["chain"], "addr": cov_map[cc]["addr"]}
+
+
+def pull_and_factor(units):
+    # per-token union window
+    tok = {}
+    for u in units:
+        k = (u["chain"], u["addr"])
+        lo, hi = u["T"] - LOOKBACK, u["T"] + EMIT_FWD
+        if k in tok:
+            tok[k] = (min(tok[k][0], lo), max(tok[k][1], hi), tok[k][2])
+        else:
+            tok[k] = (lo, hi, u["contract"])
+    # ETH first (fast), then BSC ordered by window size
+    order = sorted(tok.items(), key=lambda kv: (kv[0][0] != "ETH",
+                                                kv[1][1] - kv[1][0]))
+    keys = {}
+    for (chain, addr), (lo, hi, contract) in order:
+        fpath = os.path.join(FACT_DIR, f"{chain}_{addr}.csv")
+        if os.path.exists(fpath):
+            df = pd.read_csv(fpath)
+            if not df.empty and df["day"].min() <= lo + LOOKBACK - EMIT_BACK + 86400 \
+               and df["day"].max() >= hi - 86400:
+                keys[(chain, addr)] = fpath
+                print(f"cached factors {chain} {contract}", flush=True)
+                continue
+        print(f"pulling {chain} {contract} {addr}", flush=True)
         try:
-            f = get_factors(chain, addr, contract,
-                            int(T) - 45 * 86400, int(T) + 8 * 86400)
-        except Exception as e:  # noqa: BLE001
+            if chain == "ETH":
+                key = eth_full_pull(addr)
+            else:
+                key = bsc_windowed_pull(addr, lo, hi)
+            emit_from = lo + LOOKBACK - EMIT_BACK   # = min(T)-45d
+            f = compute_daily_factors(key, chain, addr, load_gate(contract),
+                                      emit_from, hi)
+            f.to_csv(fpath, index=False)
+            keys[(chain, addr)] = fpath
+            print(f"  factors saved: {len(f)} days", flush=True)
+        except Exception:  # noqa: BLE001
             traceback.print_exc()
-            fail.append((kind, contract, str(e)[:150]))
+            with open(os.path.join(OUT_DIR, "pull_failures.log"), "a") as fh:
+                fh.write(f"{chain} {addr} {contract}\n{traceback.format_exc()}\n")
+    return keys
+
+
+def assemble_panel(units):
+    rows = []
+    for u in units:
+        fpath = os.path.join(FACT_DIR, f"{u['chain']}_{u['addr']}.csv")
+        if not os.path.exists(fpath):
             continue
-        if f is None or f.empty:
-            fail.append((kind, contract, "empty factors"))
+        f = pd.read_csv(fpath)
+        if f.empty:
             continue
-        f = f.copy()
-        f["off"] = ((f["day"] - int(T)) // 86400).astype(int)
-        for _, r in f[(f["off"] >= min(TRAJ)) & (f["off"] <= max(TRAJ))].iterrows():
-            rec = {"kind": kind, "contract": contract, "T": int(T), "off": int(r["off"])}
+        f["off"] = ((f["day"] - u["T"]) // 86400).astype(int)
+        sel = f[(f["off"] >= min(TRAJ)) & (f["off"] <= max(TRAJ))]
+        for _, r in sel.iterrows():
+            rec = {"kind": u["kind"], "contract": u["contract"],
+                   "chain": u["chain"], "T": u["T"], "off": int(r["off"])}
             for fac in FACTORS:
                 rec[fac] = r.get(fac)
             rows.append(rec)
-        print(f"  ok [{kind}] {contract} T={T}", flush=True)
+    return pd.DataFrame(rows)
 
-    panel = pd.DataFrame(rows)
-    panel.to_csv(os.path.join(OUT_DIR, "event_panel.csv"), index=False)
-    if fail:
-        pd.DataFrame(fail, columns=["kind", "contract", "err"]).to_csv(
-            os.path.join(OUT_DIR, "event_failures.csv"), index=False)
 
-    # ---- stats: pre-event window mean per unit ----
+def run_stats(panel):
     pre = panel[(panel["off"] >= -PRE_WIN[0]) & (panel["off"] <= -PRE_WIN[1])]
     unit_mean = pre.groupby(["kind", "contract", "T"])[FACTORS].mean().reset_index()
+    unit_mean.to_csv(os.path.join(OUT_DIR, "unit_prewindow_means.csv"), index=False)
     stats = []
     for fac in FACTORS:
         a = unit_mean.loc[unit_mean["kind"] == "event", fac].dropna()
         b = unit_mean.loc[unit_mean["kind"] == "control", fac].dropna()
-        if len(a) < 4 or len(b) < 4:
-            stats.append({"factor": fac, "n_event": len(a), "n_control": len(b),
-                          "p": np.nan, "rank_biserial": np.nan,
-                          "event_median": a.median() if len(a) else np.nan,
-                          "control_median": b.median() if len(b) else np.nan})
-            continue
-        u, p = mannwhitneyu(a, b, alternative="two-sided")
-        rb = 1 - 2 * u / (len(a) * len(b))
-        stats.append({"factor": fac, "n_event": len(a), "n_control": len(b),
-                      "p": p, "rank_biserial": rb,
-                      "event_median": a.median(), "control_median": b.median()})
-    st = pd.DataFrame(stats).sort_values("p")
-    # BH-FDR
+        row = {"factor": fac, "n_event": len(a), "n_control": len(b),
+               "event_median": a.median() if len(a) else np.nan,
+               "control_median": b.median() if len(b) else np.nan,
+               "p": np.nan, "rank_biserial": np.nan}
+        if len(a) >= 4 and len(b) >= 4:
+            u, p = mannwhitneyu(a, b, alternative="two-sided")
+            row["p"] = p
+            row["rank_biserial"] = 1 - 2 * u / (len(a) * len(b))
+        stats.append(row)
+    st = pd.DataFrame(stats)
     valid = st["p"].notna()
-    m = valid.sum()
+    m = int(valid.sum())
     st["q_bh"] = np.nan
-    ranked = st.loc[valid].sort_values("p").reset_index()
-    qs = ranked["p"] * m / (np.arange(m) + 1)
-    qs = np.minimum.accumulate(qs[::-1])[::-1]
-    for i, idx in enumerate(ranked["index"]):
-        st.loc[idx, "q_bh"] = qs[i]
+    if m:
+        ranked = st.loc[valid].sort_values("p").reset_index()
+        qs = (ranked["p"] * m / (np.arange(m) + 1)).to_numpy()
+        qs = np.minimum.accumulate(qs[::-1])[::-1]
+        for i, idx in enumerate(ranked["index"]):
+            st.loc[idx, "q_bh"] = min(qs[i], 1.0)
+    st = st.sort_values("p")
     st.to_csv(os.path.join(OUT_DIR, "event_study_stats.csv"), index=False)
     print(st.to_string(index=False))
+    return st
 
-    # ---- trajectory plots ----
+
+def make_plots(panel):
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
-    plot_facs = [f for f in FACTORS if panel[f].notna().sum() > 50]
+    plot_facs = [f for f in FACTORS if panel[f].notna().sum() > 40]
     ncol = 3
-    nrow = int(np.ceil(len(plot_facs) / ncol))
+    nrow = max(1, int(np.ceil(len(plot_facs) / ncol)))
     fig, axes = plt.subplots(nrow, ncol, figsize=(15, 3.2 * nrow), squeeze=False)
     for i, fac in enumerate(plot_facs):
         ax = axes[i // ncol][i % ncol]
         for kind, color in [("event", "crimson"), ("control", "steelblue")]:
-            g = (panel[panel["kind"] == kind].groupby("off")[fac]
-                 .agg(["median", lambda x: x.quantile(0.25),
-                       lambda x: x.quantile(0.75)]))
-            g.columns = ["med", "q1", "q3"]
+            sub = panel[panel["kind"] == kind]
+            g = sub.groupby("off")[fac].agg(
+                med="median",
+                q1=lambda x: x.quantile(0.25),
+                q3=lambda x: x.quantile(0.75))
             ax.plot(g.index, g["med"], color=color, label=kind)
             ax.fill_between(g.index, g["q1"], g["q3"], color=color, alpha=0.15)
         ax.axvline(0, color="k", lw=0.8, ls="--")
-        ax.set_title(fac)
+        ax.set_title(fac, fontsize=10)
         ax.legend(fontsize=7)
-    fig.suptitle("Chip factors around squeeze episodes (day offset vs event T)")
+    for j in range(len(plot_facs), nrow * ncol):
+        axes[j // ncol][j % ncol].axis("off")
+    fig.suptitle("Chip-structure factors around squeeze episodes (event-aligned days)")
     fig.tight_layout()
     fig.savefig(os.path.join(OUT_DIR, "event_trajectories.png"), dpi=110)
-    print("saved plots + stats")
+    print("plots saved")
+
+
+def main():
+    mode = sys.argv[1] if len(sys.argv) > 1 else "all"
+    units = build_units()
+    with open(os.path.join(OUT_DIR, "pilot_units.json"), "w") as f:
+        json.dump(units, f, indent=1)
+    n_ev = sum(1 for u in units if u["kind"] == "event")
+    print(f"units: {len(units)} ({n_ev} events, {len(units)-n_ev} controls)",
+          flush=True)
+    if mode in ("pull", "all"):
+        pull_and_factor(units)
+    if mode in ("stats", "all"):
+        panel = assemble_panel(units)
+        panel.to_csv(os.path.join(OUT_DIR, "event_panel.csv"), index=False)
+        got = panel.groupby("kind")["contract"].nunique().to_dict() if len(panel) else {}
+        print(f"panel units with data: {got}")
+        if len(panel):
+            run_stats(panel)
+            make_plots(panel)
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    main()
