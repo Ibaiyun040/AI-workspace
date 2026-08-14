@@ -290,6 +290,11 @@ def hypersync_full_pull(chain: str, addr: str, max_seconds: int | None = None,
     logs = []
     block_ts_map = {}
     if os.path.exists(ckpt_path):
+        sz = os.path.getsize(ckpt_path)
+        # ~40MB gz per 1M logs; don't materialize checkpoints beyond the cap
+        if max_logs and sz > max_logs * 40:
+            raise RuntimeError(f"log cap exceeded (ckpt {sz>>20}MB too large "
+                               f"for cap {max_logs}); use windowed fallback")
         with gzip.open(ckpt_path, "rt") as f:
             ck = json.load(f)
         from_block = ck["next_block"]
